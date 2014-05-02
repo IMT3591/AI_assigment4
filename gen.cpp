@@ -19,7 +19,10 @@ const int NUM_OF_LAYERS		= 2;
 const int NUM_IN_HIDDEN		= 120;
 const int ANN_PER_GEN		= 4;
 
+class Node;
 class Link;
+class Network;
+class Data;
 
 struct Floaty{
 	int base;
@@ -96,6 +99,7 @@ class Network{
 		void save();
 		void couple( Network* );
 		char pushForward();
+		int testData(Data*);
 };
 
 class Data{
@@ -214,7 +218,7 @@ void Network::couple(Network* net){
 	Link* fooler = head->getNext();
 	for(i=0;i<220;i++){
 		mut=rand()%32;
-		if(rand()%1 == 1){
+		if(rand()%3 != 1){
 			help = fooler->getWeight();
 			if(mut<18)
 				help->base ^= (1<<mut);
@@ -255,7 +259,58 @@ char Network::pushForward(){
 
 //General functions implementation
 
-int main(){
+bool before(int* values, int value){
+	bool ret=false;
+	int i;
+	for(i=0;i<ANN_PER_GEN;i++){
+		if(values[i]=value)
+			ret=true;
+	}
+	return ret;
+}
 
-	return 0;
+float arrange(float* errors, int* orderednn){
+	int i, j;
+	float foo[ANN_PER_GEN];
+	foo[0]=100000000000000000;
+	for(i=0;i<ANN_PER_GEN;i++){
+		for(j=0;j<ANN_PER_GEN;j++){
+			if(foo[i]>errors[j] && !before(orderednn, j)){
+				foo[i]=errors[j];
+				orderednn[i]=j;
+			}
+		}
+	}
+	return foo[0];
+}
+
+//General functions implementation
+
+void learn(){
+	Network** Nets;
+	float errors[ANN_PER_GEN], error;
+	int i, j, adpt[ANN_PER_GEN], gen=0;
+	for( i=0;i<ANN_PER_GEN;i++ ){//create networks
+		Nets[i] = new Network(i,(const char*)"save1.dat");
+		adpt[i] = ANN_PER_GEN + 1;
+	}
+	i=0;
+	do{			//learning time
+		for(j=0;j<ANN_PER_GEN;j++)//clean error variable
+			errors[j]=0;
+		while(i<NUM_OF_LETTER*LEARNING_SET){//Test
+			for( j=0;j<ANN_PER_GEN;j++)
+				errors[j] += i/LEARNING_SET-Nets[j]->testData(learningSet[i]);
+		}
+		//calculate error
+		error=errors[0];
+		error=arrange(errors,adpt);
+		if(error>0.01){//evolute
+			for(i=0;i<ANN_PER_GEN/2;i++){
+				Nets[i]->couple(Nets[ANN_PER_GEN/2+i]);
+			}
+		}
+		cout << "Generation " << gen << " error " << error << "\n";
+		gen++;
+	}while(error > 0.01);
 }
