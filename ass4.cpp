@@ -142,20 +142,22 @@ void printAverage(int* avgfit){
 	}
 }
 
-void arrange(Chromosome* head){
+Chromosome* arrange(Chromosome* head){
 	int i, j;
-	for (i=0;i<POPULATION;i++){		
+	for (i=0;i<POPULATION;i++){
 		Chromosome* foo = head;
 		Chromosome* fooler = foo->getNext();
 		for(j=0;j<POPULATION;j++){
-			if(foo->getFitness()<fooler->getFitness()){
+			if(foo->getFitness() < fooler->getFitness()){
 				if(j=0)	head=fooler;
 				foo->setNext(fooler->getNext());
-				fooler->setNext(foo->getNext());
+				fooler->setNext(foo);
 				foo=fooler;
 			}
-			foo=foo->getNext();
-			fooler=foo->getNext();			
+			if(foo->getNext())
+				foo=foo->getNext();
+			if(foo->getNext()!=NULL)
+				fooler=foo->getNext();
 		}
 	}
 }
@@ -235,7 +237,7 @@ int main(){
 			father[i]=find(head, choice);
 			i++;
 		}while(i<POPULATION);
-//		arrange(head);
+		arrange(head);
 		Chromosome* newgen=bried(father, gen);
 		//head->~Chromosome();
 		head=newgen;
