@@ -15,18 +15,18 @@ const string GRAPH[] = {" ","_","_-_","_-_-_","_-_-_-_","_-_-_-_-_","_-_-_-_-_-_
 
 class Chromosome{
 	private:
-		char string;
-		char label;
-		int fitness;
+		char	string;
+		char	label;
+		int		fitness;
 		Chromosome* next;
 	public:
 		Chromosome();
 		Chromosome(char, char);
 		~Chromosome();
 
-		Chromosome* getNext(){	return next;	};
-		int getFitness(){	return fitness;	};
-		char getString(){	return string;	};
+		Chromosome* getNext(){	return next;		};
+		int getFitness(){				return fitness;	};
+		char getString(){				return string;	};
 
 		void setNext(Chromosome*);
 
@@ -43,10 +43,10 @@ class Chromosome{
 	**/
 
 Chromosome::Chromosome(char str, char lab){
-	string=str;
-	label=lab;
+	string	=	str;
+	label		=	lab;
 	calcFitness();
-	next=NULL;
+	next		=	NULL;
 }
 
 	/**
@@ -55,13 +55,10 @@ Chromosome::Chromosome(char str, char lab){
 	**/
 
 Chromosome::~Chromosome(){
-	string=0;
-	label=0;
-	fitness=0;
-	if(next==NULL)
-		delete next;
-	else
-		next->~Chromosome();
+	string	=	0;
+	label		=	0;
+	fitness	=	0;
+	next 		= NULL;
 }
 
 	/**
@@ -82,10 +79,8 @@ void Chromosome::setNext(Chromosome* nxt){
 void Chromosome::calcFitness(){
 	unsigned char sum=string;
 	fitness=0;
-	while(sum>0)
-	{
-		if(sum%2 != 0)
-		{
+	while(sum>0){
+		if(sum%2 != 0){
 			fitness++;   // counting number of ones
 		}
 		sum=sum/2;
@@ -108,7 +103,7 @@ void Chromosome::display(){
 	**/
 
 void Chromosome::mutate(){
-	if(rand()%(1000/MUTATION_PROBABILITY)==1){
+	if( rand()%( 1000/MUTATION_PROBABILITY ) == 1){
 		string^=(1<<rand()%8);
 	}
 }
@@ -120,13 +115,14 @@ void Chromosome::mutate(){
 	*	\brief	Prints the information about all the chromosomes in the generation
 	**/
 
-void displayAll(Chromosome* head, int gen, int avgfit){
+void displayAll(Chromosome* root, int gen, int avgfit){
 	int i;
-	Chromosome* foo=head;
-	cout << "Generation: " << gen << " average fit: " << avgfit << "\n" << "Label \t String \t Fitness\n";
+	Chromosome* foo=root;
+	cout << "Generation: " << gen << " average fit: " << avgfit 
+			 << "\nLabel\t String \t Fitness\n";
 	for(i=0;i<POPULATION;i++){
 		foo->display();
-		foo=foo->getNext();
+		foo	=	foo->getNext();
 	}
 }
 
@@ -142,14 +138,23 @@ void printAverage(int* avgfit){
 	}
 }
 
-Chromosome* arrange(Chromosome* head){
+void deleteChromosomes( Chromosome* head ){
+	Chromosome *cc = head, *cn;
+	while( cc != NULL ){
+		cn = cc->getNext();	//Grab next object
+		delete cc;
+		cc = cn;						//Move to grabbed object
+	}
+}
+
+Chromosome* arrange(Chromosome* root){
 	int i, j;
 	for (i=0;i<POPULATION;i++){
-		Chromosome* foo = head;
+		Chromosome* foo = root;
 		Chromosome* fooler = foo->getNext();
 		for(j=0;j<POPULATION;j++){
 			if(foo->getFitness() < fooler->getFitness()){
-				if(j=0)	head=fooler;
+				if(j=0)	root = fooler;
 				foo->setNext(fooler->getNext());
 				fooler->setNext(foo);
 				foo=fooler;
@@ -162,18 +167,18 @@ Chromosome* arrange(Chromosome* head){
 	}
 }
 
-	/**
-	*	\author	20140504 - Adrian Alberdi Ainciburu	
-	*	\brief	Calculates the total fitness of the generation. The maximun value is: POPULATION*8
-	**/
-
-int totalFit(Chromosome* head){
-        int i, totalFit = 0;
-        Chromosome* foo=head;
-        for(i=0;i<POPULATION;i++){
-                totalFit += foo->getFitness();
-                foo=foo->getNext();
-        }
+/**
+*	\author	20140504 - Adrian Alberdi Ainciburu	
+*	\brief	Calculates the total fitness of the generation. The maximun value is:
+*	POPULATION*8
+**/
+int totalFit(Chromosome* root){
+  int i, totalFit = 0;
+  Chromosome* foo=root;
+  for(i=0; i<POPULATION; i++){
+    totalFit += foo->getFitness();
+    foo = foo->getNext();
+  }
 	return totalFit;
 }
 
@@ -182,33 +187,33 @@ int totalFit(Chromosome* head){
 	*	\brief	Finds a chromosome by the method of spinning wheel fitness.
 	**/
 
-Chromosome* find(Chromosome* head, int choice){
-	Chromosome* foo=head;
+Chromosome* find(Chromosome* root, int choice){
+	Chromosome* foo=root;
 	int tot=foo->getFitness();
 	while(choice>tot){
-		foo=foo->getNext();
-		tot+=foo->getFitness();
+		foo	= foo->getNext();
+		tot+= foo->getFitness();
 	}
 	return foo;
 }
 
 Chromosome* bried(Chromosome* father[], int gen){
 	int crossover, notcrossover;
-	crossover=rand()%256;
-	notcrossover=crossover^0xFF;
+	crossover		=	rand()%256;
+	notcrossover=	crossover^0xFF;
 	Chromosome* newgen = new Chromosome((father[0]->getString()&crossover)|(father[1]->getString()&notcrossover), 'A'+gen*POPULATION);
 	Chromosome* foo = newgen;
 	foo->mutate();
 	foo->setNext(new Chromosome((father[1]->getString()&crossover)|(father[0]->getString()&notcrossover), 'A'+gen*POPULATION+1));
-	foo=foo->getNext();
+	foo	=	foo->getNext();
 	foo->mutate();
-        crossover=rand()%256;
-        notcrossover=crossover^0xFF;
+  crossover		=	rand()%256;
+  notcrossover=	crossover^0xFF;
 	foo->setNext(new Chromosome((father[2]->getString()&crossover)|(father[3]->getString()&notcrossover),'A'+gen*POPULATION+2));
-	foo=foo->getNext();
+	foo	=	foo->getNext();
 	foo->mutate();
-        foo->setNext(new Chromosome((father[3]->getString()&crossover)|(father[2]->getString()&notcrossover),'A'+gen*POPULATION+3));
-	foo=foo->getNext();
+  foo->setNext(new Chromosome((father[3]->getString()&crossover)|(father[2]->getString()&notcrossover),'A'+gen*POPULATION+3));
+	foo	=	foo->getNext();
 	foo->mutate();
 	return newgen;
 }
@@ -216,38 +221,42 @@ Chromosome* bried(Chromosome* father[], int gen){
 int main(){
 	srand(time(NULL));
 	int i, j, fit, choice, avgfit[LIMIT], gen=0;
-        Chromosome * father[POPULATION];
+  Chromosome * father[POPULATION];
 	//start chomosome creation
 	Chromosome* head = new Chromosome(STRINGS[0], 'A');
-        Chromosome* foo = head;
-        for(i=1;i<POPULATION;i++){
-                foo->setNext(new Chromosome(STRINGS[i],'A'+(char)i));
-                foo = foo->getNext();
-        }
-	displayAll(head,gen, avgfit[0]=3);
+  Chromosome* foo = head;
+  for( i=1; i<POPULATION; i++){
+  	foo->setNext(new Chromosome( STRINGS[i],'A' + (char)i ) );
+    foo = foo->getNext();
+  }
+	displayAll(head, gen, avgfit[0]=3);
 	//end first generation chromosome creation
 	// start brieding
 	for(j=0;j<LIMIT;j++){
 		gen++;
 		fit = totalFit(head);
 		avgfit[j+1] = fit/POPULATION;
-		i=0;
+		i = 0;
 		do{
-			choice=rand()%fit;
-			father[i]=find(head, choice);
+			choice		=	rand()%fit;
+			father[i]	=	find(head, choice);
 			i++;
 		}while(i<POPULATION);
+
 		arrange(head);
-		Chromosome* newgen=bried(father, gen);
-		//head->~Chromosome();
-		head=newgen;
-		newgen = NULL;
-		delete newgen;
+		
+		Chromosome* newgen = bried(father, gen);
+		head		=	newgen;
+		newgen	= NULL;
+		delete	newgen;
+		cout 		<< "END\n";
 		displayAll(head, gen, avgfit[j+1]);
 	}
 	//end of brieding
 	//Average fitness variation
 	printAverage(avgfit);
+	deleteChromosomes( head );
+
 	return 0;
 }
 
